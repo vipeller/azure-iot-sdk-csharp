@@ -421,6 +421,12 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
             Debug.Assert(_methodSendingLink != null);
             Debug.Assert(_methodReceivingLink != null);
 
+            bool gain = await _methodLinkLock.WaitAsync(timeout).ConfigureAwait(false);
+            if (!gain)
+            {
+                throw new TimeoutException();
+            }
+
             try
             {
                 ICollection<Task> tasks = new List<Task>();
@@ -444,6 +450,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.AmqpIoT
             finally
             {
                 if (Logging.IsEnabled) Logging.Exit(this, timeout, $"{nameof(DisableMethodsAsync)}");
+                _methodLinkLock.Release();
             }
         }
 
